@@ -2,6 +2,8 @@ Marznode
 ---------
 Just a fork of Marzban-node.
 
+Image with pinned sing-box **1.13.x** (GitHub Releases), not `jklolixxs/sing-box:latest`.
+
 - [X] xray-core
 - [X] hysteria
 - [X] sing-box

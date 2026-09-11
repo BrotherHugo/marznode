@@ -1,6 +1,6 @@
 services:
   marznode:
-    image: dawsh/marznode:latest
+    image: brotherhugo/marznode:latest
     restart: always
     network_mode: host
     command: [ "sh", "-c", "sleep 10 && python3 marznode.py" ]
