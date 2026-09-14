@@ -78,6 +78,10 @@ class SingBoxConfig(dict):
                     pvk = inbound["tls"]["reality"].get("private_key")
 
                     x25519 = get_x25519(XRAY_EXECUTABLE_PATH, pvk)
+                    if not x25519:
+                        raise RuntimeError(
+                            "xray x25519 did not return a Reality public key"
+                        )
                     settings["pbk"] = x25519["public_key"]
 
                     settings["sid"] = inbound["tls"]["reality"].get("short_id", [""])[0]

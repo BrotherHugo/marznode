@@ -19,6 +19,27 @@ def get_version(xray_path: str) -> str | None:
     return None
 
 
+def parse_x25519_output(output: str) -> Dict[str, str] | None:
+    """Parse `xray x25519` stdout for both pre-25 and 26.x labels."""
+    private = None
+    public = None
+    for raw_line in output.splitlines():
+        if ":" not in raw_line:
+            continue
+        label, _, value = raw_line.partition(":")
+        value = value.strip()
+        if not value:
+            continue
+        normalized = label.strip().lower().replace(" ", "")
+        if normalized in {"privatekey", "private_key"}:
+            private = value
+        elif normalized in {"publickey", "password"} or "publickey" in normalized:
+            public = value
+    if private and public:
+        return {"private_key": private, "public_key": public}
+    return None
+
+
 def get_x25519(xray_path: str, private_key: str = None) -> Dict[str, str] | None:
     """
     get x25519 public key using the private key
@@ -30,8 +51,4 @@ def get_x25519(xray_path: str, private_key: str = None) -> Dict[str, str] | None
     if private_key:
         cmd.extend(["-i", private_key])
     output = subprocess.check_output(cmd, stderr=subprocess.STDOUT).decode("utf-8")
-    match = re.match(r"Private key: (.+)\nPublic key: (.+)", output)
-    if match:
-        private, public = match.groups()
-        return {"private_key": private, "public_key": public}
-    return None
+    return parse_x25519_output(output)
