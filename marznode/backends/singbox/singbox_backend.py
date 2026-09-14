@@ -141,12 +141,16 @@ class SingBoxBackend(VPNBackend):
             api_stats = await asyncio.wait_for(
                 self._api.get_users_stats(reset=reset), 3
             )
-        except OSError:
+        except Exception:
+            logger.exception("sing-box v2ray_api QueryStats failed")
             api_stats = []
         stats = defaultdict(int)
         for stat in api_stats:
-            uid = int(stat.name.split(".")[0])
-            stats[uid] += stat.value
+            prefix = stat.name.split(".", 1)[0]
+            if not prefix.isdigit():
+                logger.warning("skip non-user stat name %r", stat.name)
+                continue
+            stats[int(prefix)] += stat.value
 
         return stats
 

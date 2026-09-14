@@ -102,8 +102,15 @@ class SingBoxAPI(SingBoxAPIBase):
             pattern: the pattern given directly to sing-box e.g. `user>>>`
             reset: whether to reset sing-box statistics or not."""
         stub = StatsServiceStub(self._channel)
+        # sing-box QueryStats reads `patterns` (field 3). Deprecated `pattern`
+        # (field 1) is ignored; empty Patterns returns every counter, and
+        # inbound tags then crash uid parse in get_usages.
         response = await stub.QueryStats(
-            QueryStatsRequest(pattern=pattern, reset=reset)
+            QueryStatsRequest(
+                pattern=pattern,
+                patterns=[pattern],
+                reset=reset,
+            )
         )
         results = []
         for stat in response.stat:
