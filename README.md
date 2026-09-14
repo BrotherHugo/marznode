@@ -2,7 +2,7 @@ Marznode
 ---------
 Just a fork of Marzban-node.
 
-Image with pinned sing-box **1.13.x** (GitHub Releases), not `jklolixxs/sing-box:latest`.
+Image with pinned sing-box **1.13.x** built with `with_v2ray_api` (panel traffic stats). Official GitHub musl tarball does not include that tag.
 
 - [X] xray-core
 - [X] hysteria

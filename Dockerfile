@@ -1,16 +1,26 @@
 FROM tobyxdd/hysteria:v2 AS hysteria-image
 
+# Official GitHub musl tarball has no with_v2ray_api; marznode stats need it.
+FROM golang:1.25-alpine AS sing-box-build
+ARG SING_BOX_VERSION=1.13.13
+ARG TARGETARCH
+RUN apk add --no-cache git ca-certificates
+WORKDIR /src
+RUN git clone --depth 1 --branch "v${SING_BOX_VERSION}" https://github.com/SagerNet/sing-box.git .
+ENV CGO_ENABLED=0
+RUN GOARCH="${TARGETARCH}" go build -trimpath -ldflags "-s -w" \
+      -tags "with_gvisor,with_quic,with_dhcp,with_wireguard,with_utls,with_acme,with_clash_api,with_v2ray_api" \
+      -o /out/sing-box ./cmd/sing-box
+
 FROM python:3.12-alpine
 
 ENV PYTHONUNBUFFERED=1
 
-# Evenlights: sing-box 1.13.x с GitHub Releases, не jklolixxs/sing-box:latest (1.11.3).
-ARG SING_BOX_VERSION=1.13.13
-# Upstream Dockerfile качал XTLS/alpinelinux-install-xray — репозиторий 404.
 ARG XRAY_VERSION=26.3.27
 ARG TARGETARCH
 
 COPY --from=hysteria-image /usr/local/bin/hysteria /usr/local/bin/hysteria
+COPY --from=sing-box-build /out/sing-box /usr/local/bin/sing-box
 
 WORKDIR /app
 
@@ -28,11 +38,6 @@ RUN set -eux; \
         *) echo "unsupported arch: $(uname -m)" >&2; exit 1 ;; \
       esac; \
     fi; \
-    curl -fsSL -o /tmp/sing-box.tar.gz \
-      "https://github.com/SagerNet/sing-box/releases/download/v${SING_BOX_VERSION}/sing-box-${SING_BOX_VERSION}-linux-${ARCH}-musl.tar.gz"; \
-    tar -xzf /tmp/sing-box.tar.gz -C /tmp; \
-    install -m 0755 /tmp/sing-box-*/sing-box /usr/local/bin/sing-box; \
-    rm -rf /tmp/sing-box.tar.gz /tmp/sing-box-*; \
     case "${ARCH}" in \
       amd64) XRAY_ASSET=Xray-linux-64.zip ;; \
       arm64) XRAY_ASSET=Xray-linux-arm64-v8a.zip ;; \
