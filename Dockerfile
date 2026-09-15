@@ -2,13 +2,14 @@ FROM tobyxdd/hysteria:v2 AS hysteria-image
 
 # Official GitHub musl tarball has no with_v2ray_api; marznode stats need it.
 FROM golang:1.25-alpine AS sing-box-build
-ARG SING_BOX_VERSION=1.13.13
+ARG SING_BOX_VERSION=1.14.0
 ARG TARGETARCH
 RUN apk add --no-cache git ca-certificates
 WORKDIR /src
 RUN git clone --depth 1 --branch "v${SING_BOX_VERSION}" https://github.com/SagerNet/sing-box.git .
 ENV CGO_ENABLED=0
-RUN GOARCH="${TARGETARCH}" go build -trimpath -ldflags "-s -w" \
+RUN GOARCH="${TARGETARCH}" go build -trimpath \
+      -ldflags "-s -w -X github.com/sagernet/sing-box/constant.Version=${SING_BOX_VERSION}" \
       -tags "with_gvisor,with_quic,with_dhcp,with_wireguard,with_utls,with_acme,with_clash_api,with_v2ray_api" \
       -o /out/sing-box ./cmd/sing-box
 
